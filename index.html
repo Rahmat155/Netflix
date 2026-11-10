@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111111">
+<title>RAZH — Form Monitoring Paket</title>
+<style>
+:root{--red:#2563eb;--ink:#171717;--muted:#747474;--line:#e7e7e7;--bg:#f5f5f5;--green:#187747}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+header{background:linear-gradient(125deg,#111,#303030);color:#fff;padding:27px 18px 55px}.head,main{max-width:680px;margin:auto}.brand{display:flex;align-items:center;gap:10px;font-weight:850;letter-spacing:.4px}.logo{width:35px;height:35px;border-radius:10px;background:var(--red);display:grid;place-items:center;font-size:20px;font-weight:900}
+h1{font-size:clamp(25px,5vw,34px);line-height:1.15;margin:23px 0 7px}header p{font-size:14px;color:#d0d0d0;margin:0}
+main{padding:0 15px;margin-top:-29px;margin-bottom:35px}.card{background:white;border:1px solid #eee;border-radius:18px;padding:22px;box-shadow:0 8px 28px #00000008}
+.progress-wrap{margin-bottom:18px}.progress-meta{display:flex;justify-content:space-between;color:#777;font-size:12px;font-weight:700;margin-bottom:8px}.track{height:7px;background:#eee;border-radius:20px;overflow:hidden}.bar{height:100%;width:0;background:var(--red);border-radius:20px;transition:width .2s}
+.kicker{font-size:11px;color:var(--red);font-weight:850;letter-spacing:1px;text-transform:uppercase}.question{font-size:23px;line-height:1.25;margin:7px 0 7px;font-weight:850}.sub{font-size:13px;color:var(--muted);margin:0 0 20px}
+label{display:block;font-size:13px;font-weight:750;margin-bottom:7px}input,select{width:100%;height:50px;border:1px solid #d9d9d9;border-radius:12px;padding:0 13px;font:inherit;font-size:15px;background:white;color:#222;outline:none}input:focus,select:focus{border-color:var(--red);box-shadow:0 0 0 3px #2563eb18}
+.hint{font-size:11px;color:#858585;margin:7px 1px 0}.field{margin:0 0 16px}.hidden{display:none!important}
+.actions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}.btn{border:0;border-radius:12px;min-height:49px;padding:12px 16px;font:inherit;font-weight:800;font-size:14px;cursor:pointer}.primary{background:var(--red);color:white;flex:1}.secondary{background:#f0f0f0;color:#222}.btn:disabled{opacity:.45;cursor:not-allowed}#review .actions .btn{flex:1}
+.error{display:none;color:#a00000;background:#fff0f0;border:1px solid #ffd4d4;border-radius:10px;padding:10px 12px;font-size:13px;margin-top:12px}
+.optional{border:1px dashed #ccc;border-radius:12px;padding:12px;background:#fafafa;font-size:12px;color:#666;margin-top:10px}
+.review-list{border:1px solid var(--line);border-radius:13px;overflow:hidden}.review-row{display:flex;justify-content:space-between;gap:15px;padding:11px 13px;border-bottom:1px solid var(--line);font-size:13px}.review-row:last-child{border:0}.review-row span:first-child{color:#777}.review-row strong{text-align:right;overflow-wrap:anywhere}
+.notice{background:#fff7e8;color:#755018;padding:12px;border-radius:11px;font-size:12px;margin-top:14px}
+.preview{white-space:pre-wrap;overflow-wrap:anywhere;background:#f7f7f7;border:1px solid #e8e8e8;border-radius:12px;padding:14px;font:12px/1.65 ui-monospace,monospace;margin-top:15px}
+footer{text-align:center;color:#888;font-size:11px;padding:0 20px 28px}
+
+ 
+.reminder-item{border:1px solid #e8e8e8;border-radius:13px;padding:13px;background:#fff}
+.reminder-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.reminder-head strong{font-size:13px;overflow-wrap:anywhere}
+.reminder-date{font-size:11px;color:#777;margin-top:4px}
+.reminder-status{display:inline-block;border-radius:20px;padding:5px 9px;font-size:11px;font-weight:800;background:#f1f1f1;color:#555;margin-top:9px}
+.reminder-status.soon{background:#fff4dc;color:#865400}
+.reminder-status.today{background:#ffe8e8;color:#b00020}
+.reminder-status.expired{background:#eee;color:#666}
+.reminder-actions{display:flex;gap:8px;margin-top:10px}
+.reminder-actions button{min-height:38px;padding:8px 12px;font-size:12px}
+#liveClock{position:sticky;top:0;z-index:50;background:#111;color:#fff;display:flex;justify-content:center;align-items:center;gap:13px;padding:9px 12px;font-size:12px;box-shadow:0 2px 10px #0002}
+#liveClock span{white-space:nowrap}#liveClock b{font-variant-numeric:tabular-nums;font-size:14px;color:#fff}
+#liveClock .clock-zone{color:#ffb8bb;font-size:10px}
+.history-item{border:1px solid #e8e8e8;border-radius:12px;padding:12px;background:#fafafa}
+.history-item-top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.history-item strong{font-size:13px;overflow-wrap:anywhere}
+.history-meta{font-size:11px;color:#777;margin-top:4px}
+.history-actions{display:flex;gap:7px;margin-top:10px}
+.history-actions button{min-height:36px;padding:7px 10px;font-size:12px}
+@media(max-width:480px){#liveClock{justify-content:space-between;gap:5px;font-size:11px;padding:8px 10px}#liveClock .clock-zone{font-size:9px}.history-actions{flex-wrap:wrap}}
+/* Efek ringan: transisi singkat, tanpa library atau animasi berat */
+.card{transition:box-shadow .18s ease,border-color .18s ease}
+.card:not(.hidden){animation:cardIn .22s ease-out both}
+@keyframes cardIn{from{opacity:.72;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.btn{transition:transform .12s ease,filter .12s ease,box-shadow .12s ease}
+.btn:active{transform:scale(.985)}
+.primary:hover{filter:brightness(.96);box-shadow:0 4px 12px #2563eb25}
+.secondary:hover{background:#e8e8e8}
+.logo{box-shadow:0 4px 12px #2563eb30}
+input,select{transition:border-color .15s ease,box-shadow .15s ease}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
+}
+@media(max-width:480px){.card{padding:18px}.question{font-size:21px}.actions{flex-direction:column-reverse}.btn{width:100%}}
+</style>
+</head>
+<body>
+<div id="liveClock" role="status" aria-live="off">
+ <span>🕒 <b id="clockTime">--:--:--</b></span>
+ <span id="clockDate">Memuat tanggal...</span>
+ <span class="clock-zone">Waktu perangkat</span>
+</div>
+<header><div class="head">
+ <div class="brand"><span class="logo">R</span><span>RAZH • MONITORING PAKET</span></div>
+ <h1 id="pageTitle">Pantau masa aktif paket</h1>
+ <p id="pageSubtitle">Layanan monitoring independen milik seller untuk mencatat pesanan dan memantau masa aktif paket.</p>
+</div></header>
+<main>
+ <div id="globalBackWrap" class="hidden" style="margin:0 0 16px">
+  <button class="btn primary" id="globalBackBtn" type="button" style="width:100%;min-height:50px;padding:12px 16px;font-size:15px;box-shadow:0 4px 12px #2563eb30">← KEMBALI KE BERANDA</button>
+ </div>
+ <div id="homeDashboard">
+<section class="card" id="homeWelcome" style="margin-top:15px">
+  <div class="kicker">BERANDA</div>
+  <h2 class="question" style="font-size:20px">Selamat datang!</h2>
+  <p class="sub" style="margin-bottom:14px">Baru membeli paket? Isi formulir agar data pesanan tercatat dan masa aktifnya bisa dipantau. Jika sudah pernah mengisi, cek pengingat dan riwayat di bawah. Layanan ini dikelola secara independen oleh seller dan tidak berafiliasi dengan Netflix.</p>
+  <button class="btn primary" id="createMonitoringBtn" type="button" style="width:100%">＋ Isi Form Monitoring</button>
+ </section>
+<section class="card" id="reminderCard" style="margin-top:15px">
+  <div class="kicker">PENGINGAT MASA AKTIF</div>
+  <h2 class="question" style="font-size:20px">Masa aktif paket</h2>
+  <p class="sub">Pantau sisa masa paket dari riwayat yang tersimpan di browser/perangkat ini. Status diperbarui otomatis mengikuti tanggal perangkat.</p>
+  <div id="reminderList" style="display:grid;gap:10px"></div>
+  <div class="hint">Pengingat ini hanya tampil saat website dibuka. Website tidak mengirim notifikasi jika ditutup.</div>
+ </section>
+ <section class="card" id="historyCard" style="margin-top:15px">
+  <div class="kicker">ARSIP PENGISIAN DI PERANGKAT INI</div>
+  <h2 class="question" style="font-size:20px">Riwayat monitoring</h2>
+  <p class="sub">Catatan yang pernah dibuat di browser/perangkat ini. Cari berdasarkan email, nomor WA, profil, atau tanggal.</p>
+  <input id="historySearch" type="search" placeholder="Cari email, nomor WA, profil, tanggal..." aria-label="Cari riwayat">
+  <div id="historyCount" class="hint">Belum ada riwayat tersimpan.</div>
+  <div id="historyList" style="display:grid;gap:10px;margin-top:12px"></div>
+  <div class="hint">Riwayat tersimpan hanya di browser dan perangkat ini, bukan otomatis terkirim atau tersinkron ke perangkat admin.</div>
+ </section>
+ </div>
+ <section class="card hidden" id="intro">
+  <div class="kicker">MOHON DIBACA SEBELUM MENGISI</div>
+  <h2 class="question">Keterangan & penting!</h2>
+  <p class="sub">Mohon pahami tujuan pengisian data dan ketentuan berikut sebelum melanjutkan.</p>
+  <div style="display:grid;gap:13px">
+   <div style="padding:14px;border:1px solid #eee;border-radius:13px">
+    <b style="display:block;margin-bottom:6px">📌 Tujuan penggunaan data</b>
+    <div style="font-size:13px;color:#555">Data yang kamu isi digunakan oleh seller untuk mencatat pesanan, mencocokkan perangkat, dan membantu memantau masa aktif paket. Website ini bukan layanan resmi Netflix dan tidak berafiliasi dengan Netflix.</div>
+   </div>
+   <div style="padding:14px;border:1px solid #d9eee1;background:#f5fff8;border-radius:13px">
+    <b style="display:block;margin-bottom:6px">🔒 Privasi data</b>
+    <div style="font-size:13px;color:#45604e">Data yang dikirim akan diterima oleh admin dan digunakan sesuai keperluan monitoring serta pelayanan akun. Jangan mengirimkan informasi sensitif seperti password atau kode OTP.</div>
+   </div>
+   <div style="padding:14px;border:1px solid #ffe3b5;background:#fff9ef;border-radius:13px">
+    <b style="display:block;margin-bottom:6px">⚠️ Perhatian</b>
+    <div style="font-size:13px;color:#755018">Isi seluruh data dengan benar, lengkap, dan sesuai perangkat yang digunakan. Kesalahan pengisian, data tidak lengkap, atau informasi yang tidak sesuai dapat menyulitkan proses validasi dan klaim garansi. Jika format tidak diisi atau data tidak sesuai ketentuan, akun dapat dianggap tidak bergaransi sesuai kebijakan seller.</div>
+   </div>
+  </div>
+  <label style="display:flex;align-items:flex-start;gap:10px;margin-top:18px;font-weight:650;line-height:1.4">
+   <input id="agreeIntro" type="checkbox" style="width:19px;height:19px;min-width:19px;margin:1px 0 0;accent-color:#2563eb">
+   <span>Saya sudah membaca dan memahami keterangan di atas.</span>
+  </label>
+  <div class="error" id="introError" role="alert"></div>
+  <div class="actions">
+   <button class="btn secondary" id="introHomeBtn" type="button">Kembali ke Beranda</button>
+   <button class="btn primary" id="startBtn" type="button">Saya Mengerti, Mulai Isi Form</button>
+  </div>
+ </section>
+ <div class="progress-wrap hidden" id="progressWrap">
+  <div class="progress-meta"><span id="progressLabel">LANGKAH 1</span><span id="progressCount">1 dari 10</span></div>
+  <div class="track"><div class="bar" id="progressBar"></div></div>
+ </div>
+ <section class="card hidden" id="wizard">
+  <div class="kicker" id="stepKicker">LANGKAH 01</div>
+  <h2 class="question" id="question">Pilih jenis akun</h2>
+  <p class="sub" id="sub">Tentukan paket yang kamu beli.</p>
+  <div id="fieldArea"></div>
+  <div class="error" id="errorBox" role="alert"></div>
+  <div class="actions">
+   <button class="btn secondary hidden" id="backBtn" type="button">Kembali</button>
+   <button class="btn primary" id="nextBtn" type="button">Lanjutkan</button>
+  </div>
+ </section>
+ <section class="card hidden" id="review">
+  <div class="kicker">TAHAP TERAKHIR</div>
+  <h2 class="question">Periksa data kamu</h2>
+  <p class="sub">Pastikan seluruh informasi sudah benar. Jika ada yang salah, tekan tombol Ubah.</p>
+  <div class="review-list" id="reviewList"></div>
+  <div class="notice">Simpan format monitoring ini. Setelah dikirim, seller/admin akan menerima data yang kamu isi.</div>
+  <div class="preview" id="messagePreview"></div>
+  <div id="manualCopyWrap" class="hidden" style="margin-top:12px">
+   <label for="manualCopyText">Teks siap disalin</label>
+   <textarea id="manualCopyText" readonly style="width:100%;min-height:220px;padding:12px;border:1px solid #ccc;border-radius:12px;font:12px/1.6 ui-monospace,monospace;white-space:pre-wrap;user-select:text;-webkit-user-select:text"></textarea>
+   <div class="notice">Browser kamu membatasi salin otomatis. Tekan lama teks di atas, pilih <b>Pilih semua</b>, lalu tekan <b>Salin</b>.</div>
+  </div>
+  <div class="error" id="sendError"></div>
+  <div class="actions">
+   <button class="btn secondary" id="editBtn" type="button">Ubah data</button>
+   <button class="btn secondary" id="copyBtn" type="button">Salin format</button>
+   <button class="btn primary" id="sendBtn" type="button">Kirim ke WhatsApp Admin</button>
+  </div>
+ </section>
+</main>
+<footer>Pastikan data sesuai dengan perangkat dan paket yang kamu gunakan.<br><br>RAZH adalah layanan monitoring independen milik seller dan tidak berafiliasi dengan Netflix.</footer>
+<script>
+// ADMIN: Isi nomor WhatsApp admin di bawah, gunakan kode negara.
+// Contoh Indonesia: 6281234567890 (tanpa +, spasi, atau 0 di depan).
+const ADMIN_WHATSAPP = "6285177556287";
+
+const $ = id => document.getElementById(id);
+const todayISO = () => {const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
+const data = {accountType:"",duration:"",email:"",customEmail:"",orderDate:todayISO(),loginDate:todayISO(),loginTime:"",loginTimezone:"WIB",customTimezone:"",device:"",profile:"",customProfile:"",buyerWA:"",cloudId:""};
+let steps = [];
+let index = 0;
+let message = "";
+
+function dateObj(v){if(!v)return null;const [y,m,d]=v.split("-").map(Number);return new Date(y,m-1,d)}
+function fmtDate(v){const d=dateObj(v);return d?d.toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"}):"-"}
+function endDate(){
+ const d=dateObj(data.orderDate);if(!d||!data.duration)return "";
+ if(data.duration==="1 Bulan"){const day=d.getDate(),month=d.getMonth()+1,last=new Date(d.getFullYear(),month+1,0).getDate();return new Date(d.getFullYear(),month,Math.min(day,last))}
+ const days=parseInt(data.duration,10);d.setDate(d.getDate()+days);return d;
+}
+function calculateExpiry(dateValue){
+ const d=dateObj(dateValue);if(!d||!data.duration)return null;
+ if(data.duration==="1 Bulan"){
+  const day=d.getDate(),month=d.getMonth()+1,last=new Date(d.getFullYear(),month+1,0).getDate();
+  return new Date(d.getFullYear(),month,Math.min(day,last));
+ }
+ d.setDate(d.getDate()+parseInt(data.duration,10));
+ return d;
+}
+function expiryText(){
+ const d=calculateExpiry(data.orderDate);
+ return d?d.toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"}):"-";
+}
+function buildSteps(){
+ steps=[
+  {key:"accountType",title:"Pilih jenis akun",sub:"Pilih jenis paket Netflix yang kamu beli.",type:"select",options:[["Sharing (1P2U)","Sharing — 1P2U"],["Semi Private","Semi Private"]]},
+  {key:"duration",title:"Pilih durasi paket",sub:"Pilihan durasi mengikuti jenis akun yang kamu pilih.",type:"select",options:data.accountType==="Semi Private"?[["7 Hari","7 Hari"],["1 Bulan","1 Bulan"]]:[["1 Hari","1 Hari"],["2 Hari","2 Hari"],["3 Hari","3 Hari"],["5 Hari","5 Hari"],["7 Hari","7 Hari"],["1 Bulan","1 Bulan"]]},
+  {key:"email",title:"Pilih email akun",sub:"Pilih email yang diberikan seller. Jika tidak ada di daftar, pilih Lainnya.",type:"select",options:data.accountType==="Semi Private"?[["razhh.netflix5@gmail.com","razhh.netflix5@gmail.com"],["Lainnya","Lainnya (isi sendiri)"]]:[["razh.netflix@gmail.com","razh.netflix@gmail.com"],["razhh.netflix3@gmail.com","razhh.netflix3@gmail.com"],["razhh.netflix5@gmail.com","razhh.netflix5@gmail.com"],["Lainnya","Lainnya (isi sendiri)"]]},
+ ];
+ if(data.email==="Lainnya") steps.push({key:"customEmail",title:"Masukkan email akun",sub:"Ketik alamat email akun yang diberikan seller.",type:"email",placeholder:"contoh@email.com"});
+ steps.push(
+  {key:"orderDate",title:"Tanggal order",sub:"Masukkan tanggal kamu melakukan pemesanan.",type:"date"},
+  {key:"loginDate",title:"Tanggal login",sub:"Masukkan tanggal pertama kali login ke akun.",type:"date"},
+  {key:"loginTime",title:"Jam login",sub:"Ketik jam sesuai waktu sebenarnya saat pertama kali kamu login. Contoh: 09:45 atau 09.45. Jangan menggunakan perkiraan.",type:"text",placeholder:"Contoh: 09:45 atau 09.45"},
+  {key:"loginTimezone",title:"Zona waktu saat login",sub:"Pilih zona waktu sesuai lokasi kamu ketika login. Jika berada di negara atau zona waktu lain, pilih opsi paling bawah.",type:"select",options:[["WIB","WIB — Waktu Indonesia Barat (UTC+7)"],["WITA","WITA — Waktu Indonesia Tengah (UTC+8)"],["WIT","WIT — Waktu Indonesia Timur (UTC+9)"],["JST","JST — Waktu Jepang (UTC+9)"],["Lainnya","Lainnya — isi sendiri"]]},
+  ...(data.loginTimezone==="Lainnya"?[{key:"customTimezone",title:"Tulis zona waktu kamu",sub:"Tuliskan singkatan zona waktu dan offset UTC, atau nama kota/negara. Contoh: CET (UTC+1), EST (UTC−5), atau London (GMT/BST).",type:"text",placeholder:"Contoh: CET (UTC+1)"}]:[]),
+  {key:"device",title:"Perangkat yang digunakan",sub:"Tuliskan merek dan tipe perangkat, bukan hanya jenisnya.",type:"text",placeholder:"Contoh: Samsung A15"},
+  {key:"profile",title:"Pilih profil Netflix",sub:"Pilih profil yang diberikan seller. Jika nama profil berbeda, pilih Lainnya.",type:"select",options:[["#razh - 1","#razh - 1"],["#razh - 2","#razh - 2"],["#razh - 3","#razh - 3"],["#razh - 4","#razh - 4"],["#razh - 5","#razh - 5"],["Lainnya","Lainnya (isi sendiri)"]]},
+ );
+ if(data.profile==="Lainnya") steps.push({key:"customProfile",title:"Masukkan nama profil",sub:"Tuliskan nama profil sesuai yang diberikan seller.",type:"text",placeholder:"Contoh: Profil keluarga"});
+ steps.push({key:"buyerWA",title:"Nomor WhatsApp kamu",sub:"Bagian ini opsional, tetapi disarankan agar admin mudah menghubungimu.",type:"tel",optional:true,placeholder:"Contoh: 081234567890"});
+}
+function renderStep(){
+ setPageHeading("Isi data monitoring", "Isi satu per satu. Setelah semua lengkap, periksa kembali sebelum mengirim ke admin.");
+ buildSteps();
+ if(index>=steps.length){showReview();return}
+ const s=steps[index],area=$("fieldArea");
+ $("stepKicker").textContent=`LANGKAH ${String(index+1).padStart(2,"0")}`;
+ $("question").textContent=s.title;
+ $("sub").textContent=s.sub;
+ $("progressLabel").textContent="PENGISIAN DATA";
+ $("progressCount").textContent=`${index+1} dari ${steps.length}`;
+ $("progressBar").style.width=`${((index+1)/steps.length)*100}%`;
+ $("backBtn").classList.toggle("hidden",index===0);
+ $("nextBtn").textContent=s.optional?"Lewati / Lanjutkan":"Lanjutkan";
+ $("errorBox").style.display="none";
+ area.innerHTML="";
+ const wrap=document.createElement("div");wrap.className="field";
+ const label=document.createElement("label");label.htmlFor="currentInput";label.textContent=s.title+(s.optional?" (opsional)":"");wrap.appendChild(label);
+ let el;
+ if(s.type==="select"){
+  el=document.createElement("select");const empty=document.createElement("option");empty.value="";empty.textContent="Pilih salah satu";el.appendChild(empty);
+  s.options.forEach(([value,text])=>{const o=document.createElement("option");o.value=value;o.textContent=text;el.appendChild(o)});
+ }else{
+  el=document.createElement("input");el.type=s.type;el.placeholder=s.placeholder||"";
+  if(s.type==="date" && !data[s.key]) el.value=todayISO();
+  if(s.type==="email") el.autocomplete="email";
+  if(s.type==="tel") el.inputMode="tel";
+ }
+ el.id="currentInput";el.value=data[s.key]||el.value||"";
+ el.required=!s.optional;
+ wrap.appendChild(el);
+ if(s.key==="orderDate"){
+  const calc=document.createElement("div");
+  calc.id="expiryCalculator";
+  calc.style.cssText="margin-top:12px;padding:13px;border:1px solid #d9eee1;background:#f5fff8;border-radius:12px";
+  const updateCalc=()=>{
+   const d=calculateExpiry(el.value);
+   calc.innerHTML=d
+    ? `<div style="font-size:11px;color:#55735f;font-weight:750">KALKULATOR TANGGAL HABIS</div><div style="font-size:12px;color:#55735f;margin-top:5px">Tanggal mulai paket: <b>${escapeHTML(fmtDate(el.value))}</b></div><div style="font-size:16px;color:#176b3d;font-weight:850;margin-top:4px">Tanggal habis: ${escapeHTML(d.toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"}))}</div><div style="font-size:11px;color:#55735f;margin-top:4px">Dihitung dari tanggal order + durasi ${escapeHTML(data.duration)}.</div>`
+    : `<div style="font-size:12px;color:#755018">Pilih tanggal order untuk menghitung tanggal habis.</div>`;
+  };
+  updateCalc();
+  el.addEventListener("input",updateCalc);
+  wrap.appendChild(calc);
+  const hint=document.createElement("p");hint.className="hint";hint.textContent="Tanggal mulai paket mengikuti tanggal order. Tanggal login dicatat terpisah dan tidak mengubah perhitungan tanggal habis.";wrap.appendChild(hint);
+ }
+ if(s.key==="loginTime"){
+  el.setAttribute("inputmode","numeric");
+  el.setAttribute("maxlength","5");
+  el.setAttribute("autocomplete","off");
+ }
+ if(s.optional){const hint=document.createElement("div");hint.className="optional";hint.textContent="Boleh dikosongkan. Tekan “Lewati / Lanjutkan” jika tidak ingin mengisi nomor WhatsApp.";wrap.appendChild(hint)}
+ if(s.key==="orderDate"||s.key==="loginDate"){const h=document.createElement("p");h.className="hint";h.textContent="Contoh: pilih tanggal dari kalender.";wrap.appendChild(h)}
+ area.appendChild(wrap);
+ el.focus();
+}
+function setError(t){$("errorBox").textContent=t;$("errorBox").style.display="block"}
+function advance(){
+ const s=steps[index],el=$("currentInput"),v=el.value.trim();
+ if(!s.optional&&!v){setError("Kolom ini wajib diisi sebelum lanjut.");el.focus();return}
+ if(s.key==="customEmail"&&v&&!el.checkValidity()){setError("Format email belum valid. Periksa kembali.");el.focus();return}
+ if(s.key==="customTimezone" && !v){setError("Tuliskan zona waktu kamu, misalnya CET (UTC+1) atau London (GMT/BST).");el.focus();return}
+ if(s.key==="loginTime"){
+  const normalized=v.replace(".",":");
+  if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(normalized)){setError("Masukkan jam yang benar, contoh 09:45, 09.45, 18:30, atau 18.30.");el.focus();return}
+  data[s.key]=normalized;
+ }
+ if(s.key==="email"&&v==="Lainnya"){data.customEmail=""}
+ if(s.key==="profile"&&v==="Lainnya"){data.customProfile=""}
+ data[s.key]=v;
+ if(s.key==="accountType"){data.duration="";data.email="";data.customEmail=""}
+ if(s.key==="email"&&v!=="Lainnya")data.customEmail="";
+ if(s.key==="profile"&&v!=="Lainnya")data.customProfile="";
+ if(s.key==="loginTimezone"&&v!=="Lainnya")data.customTimezone="";
+ index++;
+ buildSteps();
+ if(index>=steps.length)showReview();else renderStep();
+}
+function emailValue(){return data.email==="Lainnya"?data.customEmail:data.email}
+function profileValue(){return data.profile==="Lainnya"?data.customProfile:data.profile}
+function createMessage(){
+ return `> *KESALAHAN PADA SAAT MENGISI FORMAT BISA BERAKIBAT FATAL* ‼️
+> DI TUNGGU *MAKS 3 JAM*
+> GA DI ISI? \`KICK LANGSUNG\`‼️
+> *DILARANG KERAS MENAMBAH / MENGHUBUNGKAN PERANGKAT APAPUN TANPA IZIN.* KETAHUAN? \`DENDA\` ‼️
+> PERANGKAT DI LUAR FORMAT *AKAN KETAHUAN OLEH SISTEM.*
+> DIMOHON BACA SYARAT & KETENTUAN NETFLIX NYA YAA (BANYAKIN LITERASI, IZIIIN..)
+
+> \`SIMPAN FORMAT INI JANGAN SAMPE HILANG\` KARENA AKAN DIMINTA PADA SAAT KLAIM GARANSI / JIKA TERJADI KENDALA. *HILANG?* \`RESIKO TANGGUNG SENDIRI / TIDAK DILAYANI,\` KARENA TERMASUK KESALAHAN PEMBELI
+┏━━━━━━━━━━━━━┓
+   🎬 *FORMAT MONITORING*
+┗━━━━━━━━━━━━━┛
+▣ Tanggal Order: ${fmtDate(data.orderDate)}
+▣ Tanggal habis: ${expiryText()}
+▣ No WA: ${data.buyerWA||"-"}
+▣ Tanggal Login: ${fmtDate(data.loginDate)}
+▣ Jam Login: ${data.loginTime} ${data.loginTimezone==="Lainnya"?data.customTimezone:data.loginTimezone}
+▣ Device: ${data.device}
+▣ Profil: ${profileValue()}
+▣ Durasi: ${data.duration}
+▣ Jenis Akun: ${data.accountType}
+▣ Email Akun: ${emailValue()}
+━━━━━━━━━━━━━━━`;
+}
+const HISTORY_KEY = "razhNetflixMonitoringHistory_v1";
+function getHistory(){
+ try{return JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]")}catch(e){return []}
+}
+function saveHistory(){
+ const records=getHistory();
+ const recordId=data.cloudId || `${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+ const record={
+  id:recordId,
+  savedAt:new Date().toISOString(),
+  accountType:data.accountType,duration:data.duration,email:emailValue(),
+  orderDate:data.orderDate,expiry:expiryText(),loginDate:data.loginDate,
+  loginTime:data.loginTime,timezone:data.loginTimezone==="Lainnya"?data.customTimezone:data.loginTimezone,
+  device:data.device,profile:profileValue(),buyerWA:data.buyerWA||"",
+  message:message
+ };
+ const existingIndex=records.findIndex(item=>item.id===recordId);
+ if(existingIndex>=0) records.splice(existingIndex,1);
+ records.unshift(record);
+ try{localStorage.setItem(HISTORY_KEY,JSON.stringify(records.slice(0,200)))}catch(e){
+  alert("Penyimpanan riwayat browser penuh atau tidak tersedia. Salin format untuk menyimpan cadangan.");
+ }
+ renderHistory();
+}
+function recordExpiryDate(r){
+ const d=dateObj(r.orderDate);if(!d||!r.duration)return null;
+ if(r.duration==="1 Bulan"){
+  const day=d.getDate(),month=d.getMonth()+1,last=new Date(d.getFullYear(),month+1,0).getDate();
+  return new Date(d.getFullYear(),month,Math.min(day,last));
+ }
+ d.setDate(d.getDate()+parseInt(r.duration,10));
+ return d;
+}
+function dateOnly(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate())}
+function renderReminders(){
+ const host=$("reminderList");if(!host)return;
+ const records=getHistory();host.innerHTML="";
+ if(!records.length){host.innerHTML='<div class="hint">Belum ada paket tersimpan. Pengingat akan muncul setelah kamu menyelesaikan pengisian formulir.</div>';return}
+ const today=dateOnly(new Date());
+ const sorted=records.map(r=>{
+  const expiry=recordExpiryDate(r);
+  const days=expiry?Math.round((dateOnly(expiry)-today)/86400000):null;
+  return {r,expiry,days};
+ }).sort((a,b)=>(a.days??99999)-(b.days??99999));
+ sorted.forEach(({r,expiry,days})=>{
+  const item=document.createElement("div");item.className="reminder-item";
+  const head=document.createElement("div");head.className="reminder-head";
+  const left=document.createElement("div");
+  const title=document.createElement("strong");title.textContent=r.email||"Email tidak tersedia";
+  const meta=document.createElement("div");meta.className="reminder-date";meta.textContent=`${r.profile||"-"} · ${r.duration||"-"} · Habis: ${expiry?expiry.toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"}):r.expiry||"-"}`;
+  left.append(title,meta);head.appendChild(left);item.appendChild(head);
+  const status=document.createElement("div");status.className="reminder-status";
+  if(days===null){status.textContent="Tanggal tidak tersedia"}
+  else if(days<0){status.classList.add("expired");status.textContent=`Sudah habis ${Math.abs(days)} hari lalu`}
+  else if(days===0){status.classList.add("today");status.textContent="Berakhir hari ini"}
+  else if(days<=3){status.classList.add("today");status.textContent=`Tinggal ${days} hari lagi`}
+  else if(days<=7){status.classList.add("soon");status.textContent=`Tinggal ${days} hari lagi`}
+  else{status.textContent=`Tersisa ${days} hari`}
+  item.appendChild(status);
+  const actions=document.createElement("div");actions.className="reminder-actions";
+  const renew=document.createElement("button");renew.type="button";renew.className="btn primary";renew.textContent="Perpanjang via WhatsApp";
+  renew.addEventListener("click",()=>{
+   const text=`Halo Admin, saya ingin menanyakan perpanjangan paket Netflix.\nEmail akun: ${r.email||"-"}\nProfil: ${r.profile||"-"}\nJenis akun: ${r.accountType||"-"}\nDurasi sebelumnya: ${r.duration||"-"}\nTanggal habis: ${expiry?expiry.toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"}):r.expiry||"-"}\nNomor WhatsApp: ${r.buyerWA||"-"}\nMohon info cara perpanjangnya. Terima kasih.`;
+   window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(text)}`,"_blank","noopener");
+  });
+  actions.appendChild(renew);item.appendChild(actions);host.appendChild(item);
+ });
+}
+
+function renderHistory(){
+ renderReminders();
+ const list=$("historyList");if(!list)return;
+ const all=getHistory(),q=($("historySearch")?.value||"").trim().toLowerCase();
+ const filtered=all.filter(r=>[r.email,r.buyerWA,r.profile,r.orderDate,r.device,r.accountType].join(" ").toLowerCase().includes(q));
+ $("historyCount").textContent=all.length?`${filtered.length} dari ${all.length} riwayat ditemukan`:"Belum ada riwayat tersimpan.";
+ list.innerHTML="";
+ if(!filtered.length){
+  const empty=document.createElement("div");empty.className="hint";empty.textContent=all.length?"Tidak ada riwayat yang cocok.":"Riwayat akan muncul setelah formulir selesai dibuat.";list.appendChild(empty);return;
+ }
+ filtered.forEach(r=>{
+  const card=document.createElement("div");card.className="history-item";
+  const top=document.createElement("div");top.className="history-item-top";
+  const title=document.createElement("strong");title.textContent=r.email||"Email tidak tersedia";
+  const date=document.createElement("span");date.className="history-meta";date.textContent=new Date(r.savedAt).toLocaleString("id-ID");
+  top.append(title,date);card.appendChild(top);
+  const meta=document.createElement("div");meta.className="history-meta";
+  meta.textContent=`${r.profile} · ${r.device} · Order ${fmtDate(r.orderDate)} · Habis ${r.expiry}`;
+  card.appendChild(meta);
+  const actions=document.createElement("div");actions.className="history-actions";
+  const copy=document.createElement("button");copy.className="btn secondary";copy.type="button";copy.textContent="Salin format";
+  copy.addEventListener("click",async()=>{
+   try{
+    if(!navigator.clipboard || !window.isSecureContext) throw new Error("Clipboard tidak tersedia");
+    await navigator.clipboard.writeText(r.message);
+    copy.textContent="Tersalin ✓";
+    setTimeout(()=>copy.textContent="Salin format",1800);
+   }catch(e){
+    // Jangan membuka tab about:blank. Tampilkan teks langsung di kartu riwayat.
+    let fallback=card.querySelector(".history-copy-fallback");
+    if(!fallback){
+     fallback=document.createElement("div");
+     fallback.className="history-copy-fallback";
+     fallback.style.cssText="margin-top:10px";
+     const tip=document.createElement("p");
+     tip.className="hint";
+     tip.textContent="Browser membatasi salin otomatis. Tekan lama teks di bawah, pilih Semua, lalu Salin.";
+     const area=document.createElement("textarea");
+     area.readOnly=true;
+     area.value=r.message;
+     area.setAttribute("aria-label","Format monitoring untuk disalin");
+     area.style.cssText="width:100%;min-height:210px;padding:11px;border:1px solid #ccc;border-radius:10px;font:12px/1.55 monospace;white-space:pre-wrap;user-select:text;-webkit-user-select:text";
+     fallback.append(tip,area);
+     card.appendChild(fallback);
+    }
+    const area=fallback.querySelector("textarea");
+    area.focus();area.select();area.setSelectionRange(0,area.value.length);
+    fallback.scrollIntoView({behavior:"smooth",block:"center"});
+    copy.textContent="Teks siap disalin";
+   }
+  });
+  const remove=document.createElement("button");remove.className="btn secondary";remove.type="button";remove.textContent="Hapus";
+  remove.addEventListener("click",()=>{if(confirm("Hapus riwayat ini dari perangkat ini?")){localStorage.setItem(HISTORY_KEY,JSON.stringify(getHistory().filter(x=>x.id!==r.id)));renderHistory()}});
+  actions.append(copy,remove);card.appendChild(actions);list.appendChild(card);
+ });
+}
+function updateLiveClock(){
+ const now=new Date();
+ $("clockTime").textContent=now.toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});
+ $("clockDate").textContent=now.toLocaleDateString("id-ID",{weekday:"short",day:"numeric",month:"short",year:"numeric"});
+}
+$("historySearch").addEventListener("input",renderHistory);
+updateLiveClock();setInterval(updateLiveClock,1000);
+renderHistory();setInterval(renderReminders,60000);
+
+function showReview(){
+ setPageHeading("Periksa data kamu", "Pastikan informasi sudah benar sebelum dikirim ke admin.");
+ $("wizard").classList.add("hidden");$("review").classList.remove("hidden");
+ $("progressLabel").textContent="PENGECEKAN DATA";$("progressCount").textContent="Selesai";$("progressBar").style.width="100%";
+ const rows=[
+ ["Jenis akun",data.accountType],["Durasi",data.duration],["Email akun",emailValue()],
+ ["Tanggal order",fmtDate(data.orderDate)],["Tanggal habis",expiryText()],
+ ["Tanggal login",fmtDate(data.loginDate)],["Jam login",`${data.loginTime} ${data.loginTimezone==="Lainnya"?data.customTimezone:data.loginTimezone}`],["Device",data.device],
+ ["Profil",profileValue()],["Nomor WhatsApp",data.buyerWA||"Tidak diisi"]
+ ];
+ $("reviewList").innerHTML=rows.map(([k,v])=>`<div class="review-row"><span>${escapeHTML(k)}</span><strong>${escapeHTML(v)}</strong></div>`).join("");
+ message=createMessage();$("messagePreview").textContent=message;
+ saveHistory();
+ if(window.netflixCloudSave && data.cloudId){
+  const expiry = calculateExpiry(data.orderDate);
+  const expiryDate = expiry ? `${expiry.getFullYear()}-${String(expiry.getMonth()+1).padStart(2,"0")}-${String(expiry.getDate()).padStart(2,"0")}` : "";
+  window.netflixCloudSave({
+   submissionId:data.cloudId, accountType:data.accountType, duration:data.duration,
+   email:emailValue(), orderDate:data.orderDate, expiryDate, loginDate:data.loginDate,
+   loginTime:data.loginTime, timezone:data.loginTimezone==="Lainnya"?data.customTimezone:data.loginTimezone,
+   device:data.device, profile:profileValue(), buyerWA:data.buyerWA||""
+  }).catch(err=>console.error("Firebase save failed",err));
+ }
+}
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function setPageHeading(title,subtitle){
+ $("pageTitle").textContent=title;
+ $("pageSubtitle").textContent=subtitle;
+ const onHome = title === "Pantau masa aktif paket" || title === "Pantau masa aktif Netflix";
+ $("globalBackWrap").classList.toggle("hidden", onHome);
+}
+$("globalBackBtn").addEventListener("click",()=>{
+ $("intro").classList.add("hidden");
+ $("wizard").classList.add("hidden");
+ $("review").classList.add("hidden");
+ $("progressWrap").classList.add("hidden");
+ $("homeDashboard").classList.remove("hidden");
+ $("introError").style.display="none";
+ $("errorBox").style.display="none";
+ $("sendError").style.display="none";
+ index = 0;
+ setPageHeading("Pantau masa aktif paket", "Layanan monitoring independen milik seller untuk mencatat pesanan dan memantau masa aktif paket.");
+ window.scrollTo({top:0,behavior:"smooth"});
+});
+$("createMonitoringBtn").addEventListener("click",()=>{
+ data.accountType="";data.duration="";data.email="";data.customEmail="";
+ data.orderDate=todayISO();data.loginDate=todayISO();data.loginTime="";
+ data.loginTimezone="WIB";data.customTimezone="";data.device="";
+ data.profile="";data.customProfile="";data.buyerWA="";
+ data.cloudId = (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(36).slice(2)}`);
+ index=0;
+ $("agreeIntro").checked=false;
+ $("homeDashboard").classList.add("hidden");
+ $("intro").classList.remove("hidden");
+ setPageHeading("Sebelum mulai", "Baca keterangan dan ketentuan pengisian data terlebih dahulu.");
+ window.scrollTo({top:0,behavior:"smooth"});
+});
+$("introHomeBtn").addEventListener("click",()=>{
+ $("intro").classList.add("hidden");
+ $("wizard").classList.add("hidden");
+ $("review").classList.add("hidden");
+ $("progressWrap").classList.add("hidden");
+ $("homeDashboard").classList.remove("hidden");
+ $("introError").style.display="none";
+ setPageHeading("Pantau masa aktif paket", "Layanan monitoring independen milik seller untuk mencatat pesanan dan memantau masa aktif paket.");
+ window.scrollTo({top:0,behavior:"smooth"});
+});
+$("startBtn").addEventListener("click",()=>{
+ if(!$("agreeIntro").checked){
+  $("introError").textContent="Centang persetujuan setelah membaca keterangan untuk melanjutkan.";
+  $("introError").style.display="block";
+  return;
+ }
+ $("intro").classList.add("hidden");
+ $("homeDashboard").classList.add("hidden");
+ setPageHeading("Isi data monitoring", "Isi satu per satu. Setelah semua lengkap, periksa kembali sebelum mengirim ke admin.");
+ $("progressWrap").classList.remove("hidden");
+ $("wizard").classList.remove("hidden");
+ renderStep();
+ window.scrollTo({top:0,behavior:"smooth"});
+});
+$("nextBtn").addEventListener("click",advance);
+$("backBtn").addEventListener("click",()=>{if(index>0){index--;renderStep()}});
+$("editBtn").addEventListener("click",()=>{setPageHeading("Isi data monitoring", "Periksa dan ubah data yang diperlukan.");$("review").classList.add("hidden");$("wizard").classList.remove("hidden");index=0;renderStep()});
+$("copyBtn").addEventListener("click",async()=>{
+ const btn=$("copyBtn"),manual=$("manualCopyWrap"),textArea=$("manualCopyText");
+ try{
+  if(navigator.clipboard && window.isSecureContext){
+   await navigator.clipboard.writeText(message);
+   btn.textContent="Berhasil disalin ✓";
+   manual.classList.add("hidden");
+   setTimeout(()=>btn.textContent="Salin format",1800);
+   return;
+  }
+  throw new Error("Clipboard API tidak tersedia");
+ }catch(e){
+  // Fallback yang ramah Android: tampilkan textarea yang bisa dipilih secara manual.
+  textArea.value=message;
+  manual.classList.remove("hidden");
+  textArea.focus();
+  textArea.select();
+  textArea.setSelectionRange(0,textArea.value.length);
+  btn.textContent="Pilih teks di bawah";
+  $("sendError").textContent="Salin otomatis dibatasi oleh browser. Teks sudah disiapkan di kolom bawah—tekan lama, pilih semua, lalu Salin.";
+  $("sendError").style.display="block";
+  manual.scrollIntoView({behavior:"smooth",block:"center"});
+ }
+});
+$("sendBtn").addEventListener("click",()=>{
+ const err=$("sendError");err.style.display="none";
+ if(!ADMIN_WHATSAPP||ADMIN_WHATSAPP.includes("GANTI")){
+  err.textContent="Nomor WhatsApp admin belum dipasang oleh seller. Kamu masih bisa menyalin format di bawah ini dan mengirimkannya secara manual.";err.style.display="block";return;
+ }
+ const number=ADMIN_WHATSAPP.replace(/\D/g,"");
+ window.open(`https://wa.me/${number}?text=${encodeURIComponent(message)}`,"_blank","noopener");
+});
+// Form dimulai setelah buyer membaca dan menyetujui keterangan awal.
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getMessaging, getToken, isSupported } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBVrE2a5o_APc3z9DryjVg2JFBnPLLzW_o",
+  authDomain: "netflix-monitoring.firebaseapp.com",
+  projectId: "netflix-monitoring",
+  storageBucket: "netflix-monitoring.firebasestorage.app",
+  messagingSenderId: "14138899326",
+  appId: "1:14138899326:web:c1377d6e32b1e66c11912f",
+  measurementId: "G-QQF5KPMQVC"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+let currentUser = null;
+
+try {
+  const credential = await signInAnonymously(auth);
+  currentUser = credential.user;
+} catch (error) {
+  console.error("Firebase anonymous sign-in failed:", error);
+}
+
+window.netflixCloudSave = async (payload) => {
+  if (!currentUser) throw new Error("Firebase belum siap atau autentikasi gagal.");
+  const orderRef = doc(db, "monitoringOrders", currentUser.uid + "_" + payload.submissionId);
+  await setDoc(orderRef, {
+    uid: currentUser.uid,
+    accountType: payload.accountType,
+    duration: payload.duration,
+    email: payload.email,
+    orderDate: payload.orderDate,
+    expiryDate: payload.expiryDate,
+    loginDate: payload.loginDate,
+    loginTime: payload.loginTime,
+    timezone: payload.timezone,
+    device: payload.device,
+    profile: payload.profile,
+    buyerWA: payload.buyerWA,
+    createdAt: serverTimestamp()
+  });
+  return true;
+};
+
+const reminderCard = document.getElementById("reminderCard");
+if (reminderCard) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "btn secondary";
+  button.style.cssText = "width:100%;margin-top:12px";
+  button.textContent = "🔔 Aktifkan Notifikasi Masa Aktif";
+  const note = document.createElement("p");
+  note.className = "hint";
+  note.textContent = "Opsional. Aktifkan notifikasi pada perangkat ini untuk menerima pengingat.";
+  reminderCard.append(note, button);
+
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    try {
+      if (!currentUser) throw new Error("Firebase belum siap. Muat ulang halaman lalu coba lagi.");
+      if (!("Notification" in window)) throw new Error("Browser ini tidak mendukung notifikasi.");
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") throw new Error("Izin notifikasi belum diberikan.");
+      if (!(await isSupported())) throw new Error("Firebase Messaging tidak didukung browser ini.");
+      const sw = await navigator.serviceWorker.register("/Netflix/firebase-messaging-sw.js");
+      const messaging = getMessaging(app);
+      const token = await getToken(messaging, {
+        vapidKey: "BPVcpOLJliijyeB5i2Xv8uzXb7RZB59dTkpFhI6T8nT3_-IpThMf6BvSZDTqPFIvSVvUASfFQal7KY35IkM7oPg",
+        serviceWorkerRegistration: sw
+      });
+      if (!token) throw new Error("Token not tersedia. Coba lagi.");
+      await setDoc(doc(db, "pushTokens", currentUser.uid), {
+        token,
+        updatedAt: serverTimestamp()
+      });
+      button.textContent = "✓ Notifikasi diaktifkan";
+      note.textContent = "Perangkat ini terdaftar untuk menerima pengingat.";
+    } catch (error) {
+      console.error(error);
+      note.textContent = error.message || "Gagal mengaktifkan notifikasi.";
+      button.disabled = false;
+    }
+  });
+}
+</script>
+
+</body>
+</html>
